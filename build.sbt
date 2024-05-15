@@ -6,5 +6,7 @@ lazy val root = project
     name := "basic breaks simulations",
     version := "0.1.0",
     scalaVersion := scala3Version,
-    libraryDependencies += "org.scalameta" %% "munit" % "1.0.0-M12" % Test
+    libraryDependencies += "org.scalamock" %% "scalamock" % "6.0.0" % Test,
+    libraryDependencies += "org.scalatest" %% "scalatest" % "3.2.18" % "test",
+    scalacOptions += "-Yrangepos"
   )
