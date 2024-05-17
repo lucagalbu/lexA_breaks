@@ -1,4 +1,12 @@
 package me.lucagalbusera.simplebreaks
 
 @main def main(): Unit =
-  println("Entrypoint")
+  Simulations.constitutiveExpressers(filename =
+    "results/constitutiveExpressers"
+  )
+
+  Simulations.checkRepairRates(
+    filename = "results/breakRepairRate"
+  )
+
+  Simulations.checkLexA(filename = "results/lexaDynamics")
