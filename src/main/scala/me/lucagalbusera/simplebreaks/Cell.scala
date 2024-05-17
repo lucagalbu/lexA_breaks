@@ -10,21 +10,17 @@ case class Cell(
 )
 
 object Cell:
-  def updateCell(
-      reaction: EnumReactions,
-      deltaTime: Double,
-      cell: Cell
-  ): Cell =
-    val newTime = cell.time + deltaTime
+  def updateCell(reaction: NextReaction, cell: Cell): Cell =
+    val newTime = cell.time + reaction.deltaTime
     val newLexa = updateLexa(
-      deltaTime: Double,
+      nextTime = reaction.deltaTime,
       break = cell.break,
       currentLexa = cell.lexa,
       lexaDecay = LexaDecay,
       lexaSteadyState = LexaSteadyState
     )
 
-    reaction match
+    reaction.reaction match
       case EnumReactions.None =>
         Cell(
           mrna = cell.mrna,
