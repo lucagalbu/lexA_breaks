@@ -12,10 +12,10 @@ case class Rates(
 object Rates:
   // create a rates with the mrna creation set to have a specific slope in the peak distribution
   def createFromSlope(
-      slope: Double,
       mrnaDecay: Double,
       breakRepair: Double,
       proteinFolding: Double,
+      slope: Double = RecaSlope,
       lexaUnbinding: Double = LexaUnbinding,
       proteinCreation: Double = ProteinCreation
   ): Rates =
