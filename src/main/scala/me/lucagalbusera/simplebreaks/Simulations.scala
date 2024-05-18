@@ -7,7 +7,7 @@ object Simulations:
     val file = new File(filename)
     val bw = new PrintWriter(file)
 
-    bw.write("rm;dm;rp;rf;rr;time;reaction;break;repressed;mrna;protein\n")
+    bw.write(headerString() + "\n")
 
     val rates = Rates(
       mrnaCreation = 10,
@@ -22,11 +22,7 @@ object Simulations:
 
     while cell.time < 50 do
       bw.write(
-        s"${rates.mrnaCreation};${rates.mrnaDecay};${rates.proteinCreation};" +
-          s"${rates.proteinFolding};${rates.breakRepair};" +
-          s"${cell.time};${reaction.reaction};${cell.break};${cell.repressed};" +
-          s"${cell.mrna};${cell.protein}" +
-          "\n"
+        infoString(cell = cell, rates = rates, reaction = reaction) + "\n"
       )
 
       reaction = NextReaction.computeNext(
@@ -41,9 +37,7 @@ object Simulations:
     val file = new File(filename)
     val bw = new PrintWriter(file)
 
-    bw.write(
-      "iter;rm;dm;rp;rf;rr;ld;lss;loff;time;reaction;lexa;break;repressed;mrna;protein\n"
-    )
+    bw.write("iter" + headerString() + "\n")
 
     for repairRate <- Seq(0.1, 0.5, 1) do
       println(s"Repair rate: $repairRate")
@@ -68,12 +62,8 @@ object Simulations:
           )
           cell = Cell.updateCell(reaction = reaction, cell = cell)
           bw.write(
-            s"$iter;" +
-              s"${rates.mrnaCreation};${rates.mrnaDecay};${rates.proteinCreation};" +
-              s"${rates.proteinFolding};${rates.breakRepair};" +
-              s"${LexaDecay};${LexaSteadyState};${rates.lexaUnbinding};" +
-              s"${cell.time};${reaction.reaction};${cell.lexa};${cell.break};${cell.repressed};" +
-              s"${cell.mrna};${cell.protein}" +
+            s"$iter" +
+              infoString(cell = cell, rates = rates, reaction = reaction) +
               "\n"
           )
           if reaction.reaction == EnumReactions.breakRepaired then
@@ -85,9 +75,7 @@ object Simulations:
     val file = new File(filename)
     val bw = new PrintWriter(file)
 
-    bw.write(
-      "rm;dm;rp;rf;rr;ld;lss;loff;time;reaction;lexa;break;repressed;mrna;protein\n"
-    )
+    bw.write(headerString() + "\n")
 
     val rates = Rates.createFromSlope(
       mrnaDecay = 0.25,
@@ -101,12 +89,7 @@ object Simulations:
 
     while cell.time < 30 do
       bw.write(
-        s"${rates.mrnaCreation};${rates.mrnaDecay};${rates.proteinCreation};" +
-          s"${rates.proteinFolding};${rates.breakRepair};" +
-          s"${LexaDecay};${LexaSteadyState};${rates.lexaUnbinding};" +
-          s"${cell.time};${reaction.reaction};${cell.lexa};${cell.break};${cell.repressed};" +
-          s"${cell.mrna};${cell.protein}" +
-          "\n"
+        infoString(cell = cell, rates = rates, reaction = reaction) + "\n"
       )
       reaction = NextReaction.computeNext(
         rates = rates,
@@ -116,3 +99,17 @@ object Simulations:
       cell = Cell.updateCell(reaction = reaction, cell = cell)
 
     bw.close()
+
+  private def headerString(): String =
+    "rm;dm;rp;rf;rr;ld;lss;loff;time;reaction;lexa;break;repressed;mrna;protein"
+
+  private def infoString(
+      cell: Cell,
+      rates: Rates,
+      reaction: NextReaction
+  ): String =
+    s"${rates.mrnaCreation};${rates.mrnaDecay};${rates.proteinCreation};" +
+      s"${rates.proteinFolding};${rates.breakRepair};" +
+      s"${LexaDecay};${LexaSteadyState};${rates.lexaUnbinding};" +
+      s"${cell.time};${reaction.reaction};${cell.lexa};${cell.break};${cell.repressed};" +
+      s"${cell.mrna};${cell.protein}"
