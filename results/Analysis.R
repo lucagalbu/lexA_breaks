@@ -74,3 +74,24 @@ ggplot(mapping = aes(time, lexa)) +
 
 rm(data, repairTime, lss, ld, expected)
 
+
+# LexA binding / unbinding ------------------------------------------------
+data <- read.table("results/lexaRates", sep = ";", header = TRUE) |>
+  as_tibble() |> 
+  mutate(dt = time - lag(time)) |> 
+  filter(!is.na(dt))
+
+expected_slopes <- data.frame(
+  reaction = c("lexaBinding", "lexaUnbinding"),
+  slope = c(-unique(data$lexa), -unique(data$loff))
+)
+
+data |> ggplot(mapping = aes(dt, y = log(1-..y..))) + 
+  geom_abline(data = expected_slopes, aes(slope = slope, intercept = 0)) +
+  stat_ecdf(aes(col = "Simulation")) +
+  facet_wrap(~reaction, scales = "free_x") +
+  xlab("Time between two reactions [min]") +
+  ylab("log reverse CDF") +
+  theme_minimal() 
+
+rm(data, expected_slopes)

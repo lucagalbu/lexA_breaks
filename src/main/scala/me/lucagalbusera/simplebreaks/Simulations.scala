@@ -71,6 +71,49 @@ object Simulations:
 
     bw.close()
 
+  /** Simulates a cell without breaks and reports only the binding/unbinding of
+    * LexA. In this way, the binding/unbinding rates can be checked.
+    *
+    * @param filename
+    *   Name of a file where to write the results.
+    */
+  def checkLexaRates(filename: String): Unit =
+    val file = new File(filename)
+    val bw = new PrintWriter(file)
+
+    bw.write(headerString() + "\n")
+
+    val rates = Rates(
+      mrnaCreation = 2,
+      mrnaDecay = 0.25,
+      breakRepair = 0,
+      proteinFolding = 1.0 / 7.0,
+      lexaUnbinding = LexaUnbinding,
+      proteinCreation = 20
+    )
+
+    var cell = Cell(break = false)
+    var reaction =
+      NextReaction(reaction = EnumReactions.None, deltaTime = 0)
+    var numLexaReactions = 0
+
+    while numLexaReactions < 50000 do
+      reaction = NextReaction.computeNext(
+        rates = rates,
+        cell = cell,
+        randomGenerator = RandomGenerator
+      )
+      cell = Cell.updateCell(reaction = reaction, cell = cell)
+      if reaction.reaction == EnumReactions.lexaBinding || reaction.reaction == EnumReactions.lexaUnbinding
+      then
+        numLexaReactions += 1
+        bw.write(
+          infoString(cell = cell, rates = rates, reaction = reaction) +
+            "\n"
+        )
+
+    bw.close()
+
   def checkLexA(filename: String): Unit =
     val file = new File(filename)
     val bw = new PrintWriter(file)
