@@ -61,7 +61,8 @@ object NextReaction:
       * @return
       */
   private def reactionsFromRates(rates: Rates, cell: Cell): ListReactions =
-    val mrnaCreation = if cell.repressed then 0 else rates.mrnaCreation
+    val mrnaCreation =
+      if cell.repressed then 0 else rates.mrnaCreation * CellVolume
     val mrnaDecay = rates.mrnaDecay * cell.mrna
     val proteinFolding = rates.proteinFolding * cell.protein
     val breakRepair = if cell.break then rates.breakRepair else 0
