@@ -19,13 +19,12 @@ object Rates:
       lexaUnbinding: Double = LexaUnbinding,
       proteinCreation: Double = ProteinCreation
   ): Rates =
-    val V = 2.57
     val x = mrnaDecay / proteinFolding
     val alpha =
       if x == 1 then proteinCreation / math.E
       else proteinCreation * math.pow(x, -x / (x - 1))
-    val exponent = math.exp(slope * alpha / V)
-    val mrnaCreation = exponent / (1 - exponent) * breakRepair / V
+    val exponent = math.exp(slope * alpha / CellVolume)
+    val mrnaCreation = exponent / (1 - exponent) * breakRepair / CellVolume
 
     Rates(
       mrnaCreation = mrnaCreation,
