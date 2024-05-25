@@ -1,6 +1,7 @@
 package me.lucagalbusera.simplebreaks
 
 import java.io.{File, PrintWriter}
+import scala.collection.mutable.ListBuffer
 
 object Simulations:
   def constitutiveExpressers(filename: String): Unit =
@@ -142,6 +143,90 @@ object Simulations:
       cell = Cell.updateCell(reaction = reaction, cell = cell)
 
     bw.close()
+
+  /** Simulate various breaks and computes their heights and widths. The height
+    * is defined as the highest point of the gfp production (protein *
+    * protein_folding), while the width is the full width at half maximum.
+    *
+    * @param filename
+    *   Name of a file where to write the results. The full simulation is saved
+    *   to filename_full, while the peaks stats are saved to filename_stats.
+    * @param rates
+    *   Constat rates to use for the simulations.
+    * @param numBreaks
+    *   Number of breaks to simulate.
+    * @param threshold
+    *   Height at which the signal protein*rf is considered to be in a peak.
+    * @param printFullResults
+    *   Should all the simulation be printed (filename_full), or only the peaks
+    *   stats (filename_stats)? Useful when we want to simulate a large number
+    *   of breaks.
+    */
+  def breakDurationsFull(
+      filename: String,
+      rates: Rates,
+      numBreaks: Int,
+      threshold: Double,
+      printFullResults: Boolean
+  ): Unit =
+    val fileFull = new File(filename + "_full")
+    val bwFull = new PrintWriter(fileFull)
+    if printFullResults then bwFull.write("peakNum;" + headerString() + "\n")
+
+    val fileStats = new File(filename + "_stats")
+    val bwStats = new PrintWriter(fileStats)
+    bwStats.write("peakNum;rr;dm;rf;height;duration\n")
+
+    var foundBreaks = 0
+
+    while foundBreaks < numBreaks do
+      var cell = Cell()
+      var reaction =
+        NextReaction(reaction = EnumReactions.None, deltaTime = 0)
+
+      var measures = ListBuffer[Cell](cell)
+      while cell.break || cell.protein > 0 do
+        reaction = NextReaction.computeNext(
+          rates = rates,
+          cell = cell,
+          randomGenerator = RandomGenerator
+        )
+        cell = Cell.updateCell(reaction = reaction, cell = cell)
+        measures += cell
+
+      val height = measures.map(cell => cell.protein).max
+      if height * rates.proteinFolding / CellVolume > threshold then
+        println(s"Found peaks: $foundBreaks")
+        if printFullResults then
+          measures.foreach(cell =>
+            bwFull.write(
+              s"$foundBreaks;" +
+                infoString(cell = cell, rates = rates, reaction = reaction) +
+                "\n"
+            )
+          )
+        val height_index = measures
+          .map(cell => cell.protein)
+          .indexOf(height)
+        val start = measures
+          .take(height_index + 1)
+          .findLast(cell => cell.protein <= height / 2.0)
+        val end = measures
+          .drop(height_index)
+          .findLast(cell => cell.protein >= height / 2.0)
+        val duration =
+          (end.get.time - start.get.time) / (2.0 * math.sqrt(
+            2.0 * math.log(2.0)
+          ))
+
+        bwStats.write(
+          s"$foundBreaks;${rates.breakRepair};${rates.mrnaDecay};${rates.proteinFolding};" +
+            s"${height * rates.proteinFolding / CellVolume};$duration\n"
+        )
+        foundBreaks += 1
+
+    if printFullResults then bwFull.close()
+    bwStats.close()
 
   private def headerString(): String =
     "rm;dm;rp;rf;rr;ld;lss;loff;time;reaction;lexa;break;repressed;mrna;protein"
